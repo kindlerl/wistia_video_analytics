@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.env.* 
+*.ipynb_checkpoints
+
+# macOS / editors
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# Local data dumps (never commit real data)
+data/
+
+# Skip project documentation
+Project_Documentation/*
+
+# Ignore any MS Word lock files
+~$*
+
+# Logs / temp
+*.log
+tmp/
+cache/
+
+# Local artifacts
+docs/workflow_graph.json
+
+# Never commit secrets
+secrets/
+*.key
+*.pem
+*accessKeys*.csv
+.env*
+*.tfstate
