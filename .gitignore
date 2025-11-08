@@ -19,10 +19,13 @@ Thumbs.db
 data/
 
 # Skip project documentation
-Project_Documentation/*
+# Project_Documentation/*
 
 # Ignore any MS Word lock files
 ~$*
+
+# Ignore any drawio backup files
+*.bkp
 
 # Logs / temp
 *.log

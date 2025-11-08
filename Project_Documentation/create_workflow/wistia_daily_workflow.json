@@ -1,0 +1,11 @@
+{
+  "Name": "wistia_daily_workflow",
+  "Description": "Daily end-to-end ETL pipeline for Wistia video analytics (Bronze → Silver → Gold)",
+  "DefaultRunProperties": {
+    "Environment": "dev",
+    "Author": "Rich Kindle",
+    "Pipeline": "Wistia Video Analytics",
+    "LastUpdated": "2025-11-07"
+  }
+}
+

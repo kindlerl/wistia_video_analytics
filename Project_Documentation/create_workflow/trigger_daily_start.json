@@ -1,0 +1,13 @@
+{
+  "Name": "trigger_daily_start",
+  "Type": "SCHEDULED",
+  "WorkflowName": "wistia_daily_workflow",
+  "StartOnCreation": true,
+  "Schedule": "cron(0 1 * * ? *)",
+  "Actions": [
+    {
+      "JobName": "wistia_ingestion_bronze_job"
+    }
+  ]
+}
+

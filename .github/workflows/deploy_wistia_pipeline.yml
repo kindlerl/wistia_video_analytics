@@ -1,0 +1,69 @@
+name: Deploy & Run Wistia ETL Workflow
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * *"
+
+env:
+  AWS_REGION: us-east-1
+  GLUE_WORKFLOW_NAME: wistia_daily_workflow
+
+jobs:
+  deploy-and-run:
+    name: Deploy & Trigger AWS Glue Workflow
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Validate AWS CLI connection
+        run: aws sts get-caller-identity
+
+      - name: Trigger Glue Workflow Run
+        id: start_run
+        run: |
+          RUN_ID=$(aws glue start-workflow-run --name $GLUE_WORKFLOW_NAME --query 'RunId' --output text)
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          echo "✅ Started workflow run ID: $RUN_ID"
+
+      - name: Wait and monitor run status
+        run: |
+          STATUS=$(aws glue get-workflow-run --name $GLUE_WORKFLOW_NAME --run-id $RUN_ID --query 'Run.Status' --output text)
+          echo "Initial Status: $STATUS"
+          ATTEMPTS=0
+          while [[ "$STATUS" == "RUNNING" && $ATTEMPTS -lt 60 ]]; do
+            sleep 60
+            STATUS=$(aws glue get-workflow-run --name $GLUE_WORKFLOW_NAME --run-id $RUN_ID --query 'Run.Status' --output text)
+            echo "Current Status: $STATUS"
+            ((ATTEMPTS++))
+          done
+          echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV
+          if [[ "$STATUS" != "COMPLETED" ]]; then
+            echo "❌ Workflow failed with status: $STATUS"
+            exit 1
+          fi
+          echo "🎉 Workflow completed successfully."
+
+      - name: Notify Slack on Success
+        if: success()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\":white_check_mark: *Wistia ETL Pipeline* completed successfully!\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: COMPLETED\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Notify Slack on Failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\":\":x: *Wistia ETL Pipeline FAILED!*\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: $FINAL_STATUS\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
+

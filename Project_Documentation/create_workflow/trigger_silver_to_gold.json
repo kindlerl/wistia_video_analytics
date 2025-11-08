@@ -1,0 +1,21 @@
+{
+  "Name": "trigger_silver_to_gold",
+  "Type": "CONDITIONAL",
+  "WorkflowName": "wistia_daily_workflow",
+  "StartOnCreation": true,
+  "Predicate": {
+    "Conditions": [
+      {
+        "LogicalOperator": "EQUALS",
+        "JobName": "wistia_transform_fact_silver_job",
+        "State": "SUCCEEDED"
+      }
+    ]
+  },
+  "Actions": [
+    {
+      "JobName": "wistia_transform_gold_job"
+    }
+  ]
+}
+
