@@ -35,29 +35,37 @@ jobs:
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
           echo "✅ Started workflow run ID: $RUN_ID"
 
-      - name: Wait and monitor run status
+      - name: Check Workflow Status
+        id: check_status
         run: |
-          STATUS=$(aws glue get-workflow-run --name $GLUE_WORKFLOW_NAME --run-id $RUN_ID --query 'Run.Status' --output text)
+          STATUS=$(aws glue get-workflow-run --name "$GLUE_WORKFLOW_NAME" --run-id "$RUN_ID" --query 'Run.Status' --output text)
           echo "Initial Status: $STATUS"
           ATTEMPTS=0
-          while [[ "$STATUS" == "RUNNING" && $ATTEMPTS -lt 60 ]]; do
-            sleep 60
-            STATUS=$(aws glue get-workflow-run --name $GLUE_WORKFLOW_NAME --run-id $RUN_ID --query 'Run.Status' --output text)
-            echo "Current Status: $STATUS"
+          MAX_ATTEMPTS=120   # wait up to 2 hours
+          SLEEP_INTERVAL=60  # check every minute
+
+          while [[ "$STATUS" == "RUNNING" && $ATTEMPTS -lt $MAX_ATTEMPTS ]]; do
+            echo "⏳ Still running... (attempt $ATTEMPTS)"
+            sleep $SLEEP_INTERVAL
+            STATUS=$(aws glue get-workflow-run --name "$GLUE_WORKFLOW_NAME" --run-id "$RUN_ID" --query 'Run.Status' --output text)
             ((ATTEMPTS++))
           done
-          echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV
-          if [[ "$STATUS" != "COMPLETED" ]]; then
-            echo "❌ Workflow failed with status: $STATUS"
+
+          echo "Final workflow status: $STATUS"
+          echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV  # ✅ export to later steps
+
+          if [[ "$STATUS" == "COMPLETED" ]]; then
+            echo "🎉 Workflow completed successfully."
+          else
+            echo "⚠️ Workflow did not complete. Final status: $STATUS"
             exit 1
           fi
-          echo "🎉 Workflow completed successfully."
 
       - name: Notify Slack on Success
         if: success()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\":white_check_mark: *Wistia ETL Pipeline* completed successfully!\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: COMPLETED\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
+          --data "{\"text\":\":white_check_mark: *Wistia ETL Pipeline* completed successfully!\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: $FINAL_STATUS\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify Slack on Failure
