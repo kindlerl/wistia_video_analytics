@@ -38,11 +38,13 @@ jobs:
       - name: Check Workflow Status
         id: check_status
         run: |
+          set +e  # disable 'exit on error' for this block
+
           STATUS=$(aws glue get-workflow-run --name "$GLUE_WORKFLOW_NAME" --run-id "$RUN_ID" --query 'Run.Status' --output text)
           echo "Initial Status: $STATUS"
           ATTEMPTS=0
-          MAX_ATTEMPTS=120   # wait up to 2 hours
-          SLEEP_INTERVAL=60  # check every minute
+          MAX_ATTEMPTS=120
+          SLEEP_INTERVAL=60
 
           while [[ "$STATUS" == "RUNNING" && $ATTEMPTS -lt $MAX_ATTEMPTS ]]; do
             echo "⏳ Still running... (attempt $ATTEMPTS)"
@@ -53,22 +55,24 @@ jobs:
               --run-id "$RUN_ID" \
               --query 'Run.Status' \
               --output text 2>/dev/null || echo "UNKNOWN")
-              
+
             echo "After waking up, status is: $STATUS"
             ((ATTEMPTS++))
           done
 
           echo "Final workflow status: $STATUS"
-          echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV  # ✅ export to later steps
+          echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV
 
           if [[ "$STATUS" == "COMPLETED" ]]; then
-            echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV  # ensure export
             echo "🎉 Workflow completed successfully."
+            EXIT_CODE=0
           else
             echo "⚠️ Workflow did not complete. Final status: $STATUS"
-            echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV  # ensure exported, even in failure
-            exit 1
+            EXIT_CODE=1
           fi
+
+          set -e  # ✅ restore 'exit on error'
+          exit $EXIT_CODE
 
       - name: Notify Slack on Success
         if: success()
