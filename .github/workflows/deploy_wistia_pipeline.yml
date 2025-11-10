@@ -47,7 +47,14 @@ jobs:
           while [[ "$STATUS" == "RUNNING" && $ATTEMPTS -lt $MAX_ATTEMPTS ]]; do
             echo "⏳ Still running... (attempt $ATTEMPTS)"
             sleep $SLEEP_INTERVAL
-            STATUS=$(aws glue get-workflow-run --name "$GLUE_WORKFLOW_NAME" --run-id "$RUN_ID" --query 'Run.Status' --output text)
+
+            STATUS=$(aws glue get-workflow-run \
+              --name "$GLUE_WORKFLOW_NAME" \
+              --run-id "$RUN_ID" \
+              --query 'Run.Status' \
+              --output text 2>/dev/null || echo "UNKNOWN")
+              
+            echo "After waking up, status is: $STATUS"
             ((ATTEMPTS++))
           done
 
@@ -55,9 +62,11 @@ jobs:
           echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV  # ✅ export to later steps
 
           if [[ "$STATUS" == "COMPLETED" ]]; then
+            echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV  # ensure export
             echo "🎉 Workflow completed successfully."
           else
             echo "⚠️ Workflow did not complete. Final status: $STATUS"
+            echo "FINAL_STATUS=$STATUS" >> $GITHUB_ENV  # ensure exported, even in failure
             exit 1
           fi
 
@@ -65,13 +74,13 @@ jobs:
         if: success()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\":white_check_mark: *Wistia ETL Pipeline* completed successfully!\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: $FINAL_STATUS\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
+          --data "{\"text\":\":white_check_mark: *Wistia ETL Pipeline* completed successfully!\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: ${FINAL_STATUS:-UNKNOWN}\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Notify Slack on Failure
         if: failure()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\":x: *Wistia ETL Pipeline FAILED!*\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: $FINAL_STATUS\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
+          --data "{\"text\":\":x: *Wistia ETL Pipeline FAILED!*\\nWorkflow: $GLUE_WORKFLOW_NAME\\nRun ID: $RUN_ID\\nStatus: ${FINAL_STATUS:-UNKNOWN}\\nTimestamp: $(date -u '+%Y-%m-%d %H:%M:%S UTC')\"}" \
           ${{ secrets.SLACK_WEBHOOK_URL }}
 

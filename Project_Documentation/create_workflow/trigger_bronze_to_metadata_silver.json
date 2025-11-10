@@ -1,0 +1,20 @@
+{
+  "Name": "trigger_bronze_to_metadata_silver",
+  "Type": "CONDITIONAL",
+  "WorkflowName": "wistia_daily_workflow",
+  "Predicate": {
+    "Conditions": [
+      { 
+        "JobName": "wistia_ingestion_bronze_job", 
+        "LogicalOperator": "EQUALS",
+        "State": "SUCCEEDED" 
+      }
+    ]
+  },
+  "Actions": [
+    { 
+      "JobName": "wistia_transform_metadata_silver_job" 
+    }
+  ]
+}
+

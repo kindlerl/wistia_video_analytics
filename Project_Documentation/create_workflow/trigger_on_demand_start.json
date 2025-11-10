@@ -1,9 +1,7 @@
 {
   "Name": "trigger_start_bronze_job",
-  "Type": "SCHEDULED",
+  "Type": "ON_DEMAND",
   "WorkflowName": "wistia_daily_workflow",
-  "StartOnCreation": true,
-  "Schedule": "cron(0 1 * * ? *)",
   "Actions": [
     {
       "JobName": "wistia_ingestion_bronze_job"
