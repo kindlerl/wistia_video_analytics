@@ -52,47 +52,42 @@ schema = StructType([
 # ---------------------------------------------------------------------
 # (4) Read the Bronze JSON files
 # ---------------------------------------------------------------------
-df = (
+raw_df = (
     spark.read
     .option("multiline", "true")
     .schema(schema)
-    .json(bronze_path)
+    .json(f"{bronze_path}*.json")
 )
 
 # ---------------------------------------------------------------------
 # (5) Transformations
 # ---------------------------------------------------------------------
-df = (
-    df
-    .withColumn('created_at', F.to_timestamp("created"))
-    .withColumn('updated_at', F.to_timestamp("updated"))
-    .drop('created', 'updated')
+# After reading bronze/media_metadata/*.json into raw_df
+df_dim = (
+    raw_df.select(
+        F.col("hashed_id").alias("media_id"),        # <- canonical key
+        F.col("name").alias("title"),                # or keep 'name' and coalesce later
+        F.to_timestamp("created").alias("created_at"),
+        F.to_timestamp("updated").alias("updated_at"),
+        'duration',
+        'project',
+        'thumbnail',
+    )
     .withColumn('load_date', F.current_date())  # to be used as partition column
     .withColumn('ingestion_timestamp', F.current_timestamp())
-)
-
-# Rename columns for consistency
-df = df.select(
-    F.col('id').alias('media_id'),
-    'hashed_id',
-    F.col('name').alias('title'),
-    'duration',
-    'project',
-    'thumbnail',
-    'created_at',
-    'updated_at',
-    'load_date',
-    'ingestion_timestamp'
 )
 
 # Log message
 print('Schema aligned and timestamps standardized.')
 
+# Dedupe
+df_dim = df_dim.dropDuplicates(["media_id", "load_date"])
+
 # ---------------------------------------------------------------------
 # (6) Write to Silver Layer (Parquet & Glue Registration)
 # ---------------------------------------------------------------------
 (
-    df.write
+    df_dim.write
     .mode('overwrite')
     .format('parquet')
     .option('path', silver_path)

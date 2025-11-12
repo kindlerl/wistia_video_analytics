@@ -12,52 +12,67 @@ Step   Description
 spark = SparkSession.builder.appName("WistiaTransformGoldJob").enableHiveSupport().getOrCreate()
 
 # ---------------------------------------------------------------------
-# 1️⃣ Define Paths and Table Names
+# 1) Paths / tables
 # ---------------------------------------------------------------------
 silver_db = "wistia_silver"
-silver_table = "fact_media_engagement"
+silver_dim_table = "dim_media_metadata"
+silver_fact_table = "fact_media_engagement"
 gold_db = "wistia_gold"
 gold_table = "media_metrics_summary"
 
-silver_path = f"s3://rlk-wistia-video-analytics-dev/silver/{silver_table}/"
-gold_path   = f"s3://rlk-wistia-video-analytics-dev/gold/{gold_table}/"
+silver_fact_path = "s3://rlk-wistia-video-analytics-dev/silver/fact_media_engagement/"
+gold_path        = f"s3://rlk-wistia-video-analytics-dev/gold/{gold_table}/"
 
 # ---------------------------------------------------------------------
-# 2️⃣ Read Silver Data
+# 2) Read Silver
 # ---------------------------------------------------------------------
-df_silver = spark.read.parquet(silver_path)
+df_silver_fact = spark.read.parquet(silver_fact_path)
 
-# ---------------------------------------------------------------------
-# 3️⃣ Aggregate Metrics by load_date
-# ---------------------------------------------------------------------
-df_gold = (
-    df_silver.groupBy("load_date")
-    .agg(
-        F.sum("load_count").alias("total_loads"),
-        F.sum("play_count").alias("total_plays"),
-        F.avg("play_rate").alias("avg_play_rate"),
-        F.sum("hours_watched").alias("total_hours_watched"),
-        F.avg("engagement").alias("avg_engagement"),
-        F.sum("visitors").alias("total_visitors"),
-    )
-    .withColumn("transformed_timestamp", F.current_timestamp())
+# DIM: select stable key + friendly title
+df_dim_sel = (
+    spark.table(f"{silver_db}.{silver_dim_table}")
+         .select("media_id", F.col("title").alias("dim_title"))
+         .dropDuplicates(["media_id"])   # one label per media_id
 )
 
 # ---------------------------------------------------------------------
-# 4️⃣ Write to Gold Layer (Overwrite per run)
+# 3) Join & aggregate (one row per media_id per day)
 # ---------------------------------------------------------------------
-spark.sql("""
-    CREATE DATABASE IF NOT EXISTS wistia_gold
+df_joined = (
+    df_silver_fact.alias("f")
+    .join(df_dim_sel.alias("d"), on="media_id", how="left")
+)
+
+df_gold = (
+    df_joined
+    .groupBy("media_id", F.col("f.load_date").alias("load_date"))
+    .agg(
+        F.first("dim_title", ignorenulls=True).alias("media_name"),
+        F.sum("play_count").alias("total_plays"),
+        F.sum("visitors").alias("total_visitors"),
+        F.avg("play_rate").alias("avg_play_rate"),
+        F.avg("engagement").alias("avg_engagement"),
+    )
+    .withColumn("media_name", F.coalesce(F.col("media_name"), F.col("media_id")))
+)
+
+# ---------------------------------------------------------------------
+# 4) Write Gold (overwrite only today's partition)
+# ---------------------------------------------------------------------
+spark.sql(f"""
+    CREATE DATABASE IF NOT EXISTS {gold_db}
     LOCATION 's3://rlk-wistia-video-analytics-dev/gold/'
 """)
 
+spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+
 (
     df_gold.write
-    .mode("overwrite")
-    .format("parquet")
-    .partitionBy("load_date")
-    .option("path", gold_path)
-    .saveAsTable(f"{gold_db}.{gold_table}")
+      .mode("overwrite")
+      .format("parquet")
+      .partitionBy("load_date")
+      .option("path", gold_path)
+      .saveAsTable(f"{gold_db}.{gold_table}")
 )
 
 print(f"✅ Gold aggregation complete: {gold_db}.{gold_table}")

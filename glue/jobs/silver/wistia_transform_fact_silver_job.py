@@ -30,7 +30,7 @@ schema = StructType([
 ])
 
 # Read all stats files for both media IDs
-df = (
+df_fact = (
     spark.read
     .option("multiline", "true")
     .schema(schema)
@@ -38,8 +38,8 @@ df = (
 )
 
 # Add hashed media_id and partition date extracted from filename
-df = (
-    df.withColumn(
+df_fact = (
+    df_fact.withColumn(
         "media_id",
         F.regexp_extract(F.input_file_name(), r"bronze\/([^\/]+)\/", 1)
     )
@@ -50,9 +50,12 @@ df = (
     .withColumn("ingestion_timestamp", F.current_timestamp())
 )
 
+# Dedupe to avoid daily duplicates
+df_fact = df_fact.dropDuplicates(["media_id", "load_date"])
+
 # Write to Silver
 (
-    df.write
+    df_fact.write
       .mode("overwrite")
       .format("parquet")
       .partitionBy("load_date")

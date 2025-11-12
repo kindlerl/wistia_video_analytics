@@ -1,3 +1,9 @@
-media_name,total_plays,total_visitors,avg_play_rate,avg_engagement,load_date
-Chris Face VSL,16680,104532,15.49,16.69,2025-11-07
-The Gap Method,43810,94636,44.00,50.00,2025-11-08
+media_id,media_name,total_plays,total_visitors,avg_play_rate,avg_engagement,load_date
+v08dlrgr7v,\N,43810,94636,44.0,50.0,2025-11-07
+gskhw4w4lm,\N,16680,104532,15.0,17.0,2025-11-07
+gskhw4w4lm,\N,16680,104532,15.0,17.0,2025-11-09
+v08dlrgr7v,\N,43810,94636,44.0,50.0,2025-11-09
+v08dlrgr7v,\N,43810,94636,44.0,50.0,2025-11-08
+gskhw4w4lm,\N,16680,104532,15.0,17.0,2025-11-08
+gskhw4w4lm,\N,16680,104532,15.0,17.0,2025-11-10
+v08dlrgr7v,\N,43810,94636,44.0,50.0,2025-11-10

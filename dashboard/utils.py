@@ -6,8 +6,19 @@
 # -----------------------------------------------------------
 
 import pandas as pd
-import numpy as np
 
+def load_data():
+    df = pd.read_csv("data/sample_gold_data.csv")
+    df["load_date"] = pd.to_datetime(df["load_date"], errors="coerce")
+    df = safe_numeric(df, ["total_plays", "total_visitors", "avg_play_rate", "avg_engagement"])
+    return df
+
+def to_float_safe(value):
+    try:
+        return float(str(value).replace(",", ""))
+    except (ValueError, TypeError):
+        return 0.0
+    
 def percent_format(value, decimals=1):
     """
     Format numeric value as a percentage string.
@@ -51,8 +62,8 @@ def summarize_kpis(df):
         return {
             "total_plays": "0",
             "total_visitors": "0",
-            "avg_play_rate": "-",
-            "avg_engagement": "-"
+            "avg_play_rate": "0.0",
+            "avg_engagement": "0.0"
         }
 
     return {

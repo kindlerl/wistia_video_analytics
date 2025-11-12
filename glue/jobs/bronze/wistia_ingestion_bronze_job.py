@@ -1,4 +1,4 @@
-import sys
+iimport sys
 import json
 import boto3
 import requests
@@ -82,11 +82,41 @@ def filter_media(all_media):
 # --------------------------------------------
 def fetch_media_metadata ():
     url = "https://api.wistia.com/v1/medias.json"
-    all_metadata = fetch_all_pages(url)
+    all_items = fetch_all_pages(url)
+    
+    # In order for the silver fact and dim tables to join,
+    # they must have matching media_id's.  Ensure the two
+    # media_ids in MEDIA_IDS (passed in as a param, the 
+    # media ids provided in the requirements of this project)
+    # are present.
+    must_have = []
+    for hid in MEDIA_IDS:
+        r = requests.get(f"https://api.wistia.com/v1/medias/{hid}.json", headers=headers)
+        r.raise_for_status()
+        must_have.append(r.json())
+        
+    by_hid = {m.get("hashed_id"): m for m in all_items}
+    for m in must_have:
+        by_hid[m.get("hashed_id")] = m
+        
+    merged = list(by_hid.values())
+    
+    filtered = [
+        {
+            "hashed_id": m.get("hashed_id"),
+            "name": m.get("name"),
+            "created": m.get("created"),
+            "updated": m.get("updated"),
+            "duration": m.get("duration"),
+            "project": (m.get("project") or {}).get("name"),
+            "thumbnail": (m.get("thumbnail") or {}).get("url"),
+        }
+        for m in merged
+    ]
+    
     prefix = f"{BRONZE_PREFIX}/media_metadata"
     filename = f"metadata_stats_{today_str}.json"
-    filtered_media = filter_media(all_metadata)
-    upload_to_S3(filtered_media, prefix, filename)
+    upload_to_S3(filtered, prefix, filename)
         
 # --------------------------------------------
 # FR4, FR6, FR7 - Fetch Engagement Metrics (Incremental)
