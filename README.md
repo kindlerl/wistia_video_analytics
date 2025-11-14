@@ -79,6 +79,11 @@ Key features include:
 
 Even though the dataset is intentionally small (limited to two user IDs), the dashboard demonstrates how real-world stakeholders could explore engagement insights once connected to full Wistia production data.
 
+<!-- ![Overall application](docs/visualizations/full/full_app.png) -->
+![Key Performance Indicators](docs/visualizations/full/kpis.png)
+![Key Performance Indicators](docs/visualizations/full/plays_vs_visitors_by_media.png)
+![Key Performance Indicators](docs/visualizations/full/engagement_and_play_rate_over_time.png)
+
 Example screenshots to include:
 
 ```
