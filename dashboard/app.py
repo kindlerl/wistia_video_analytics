@@ -167,7 +167,7 @@ def main():
     st.plotly_chart(horizontal_funnel_chart(df_filtered), use_container_width=True)
 
     st.divider()
-    st.subheader("📈 Engagement and Play Rate Over Time")
+    st.subheader("📈 Lifetime Engagement & Play Rate (Snapshot)")
 
     highlight_date = pd.to_datetime(selected_date, errors="coerce")
     # if pd.notna(highlight_date):

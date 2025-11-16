@@ -79,17 +79,13 @@ Key features include:
 
 Even though the dataset is intentionally small (limited to two user IDs), the dashboard demonstrates how real-world stakeholders could explore engagement insights once connected to full Wistia production data.
 
+> **Note:** The Streamlit dashboard uses a local Gold-layer CSV snapshot to allow offline execution without requiring AWS credentials. The file is included in the repo for reproducibility.
+
 <!-- ![Overall application](docs/visualizations/full/full_app.png) -->
 ![Key Performance Indicators](docs/visualizations/full/kpis.png)
 ![Key Performance Indicators](docs/visualizations/full/plays_vs_visitors_by_media.png)
 ![Key Performance Indicators](docs/visualizations/full/engagement_and_play_rate_over_time.png)
 
-Example screenshots to include:
-
-```
-/images/streamlit_kpi.png
-/images/streamlit_trend.png
-```
 
 ---
 

@@ -60,7 +60,6 @@ def engagement_playrate_trend_chart(df, highlight_date=None):
             "value": "Percentage",
             "variable": "Metric",
         },
-        title="Engagement vs Play Rate Trends Over Time",
     )
 
     fig.update_traces(mode="markers+lines")
@@ -81,7 +80,10 @@ def engagement_playrate_trend_chart(df, highlight_date=None):
                 annotation_position="top right"
             )
 
-    fig.update_layout(template="plotly_white")
+    fig.update_layout(
+        template="plotly_white",
+        legend_title_text=None
+    )
 
     # Improve tooltips
     fig.update_traces(

@@ -16,7 +16,9 @@ Thumbs.db
 .idea/
 
 # Local data dumps (never commit real data)
-data/
+# For THIS project, local data files are needed
+data/*
+!dashboard/data/wistia_gold_snapshot.csv
 
 # Skip project documentation
 # Project_Documentation/*
