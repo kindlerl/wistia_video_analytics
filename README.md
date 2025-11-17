@@ -1,7 +1,5 @@
 # 🎬 Wistia Video Analytics Pipeline
-**An end-to-end data engineering solution for video engagement metrics from Wistia**  
-
-### End-to-End Data Engineering Pipeline
+### An End-to-End Data Engineering Pipeline for video engagement metrics from Wistia
 
 **Tech Stack:** AWS Glue • S3 • Athena • PySpark • Streamlit • GitHub Actions (CI/CD)
 
