@@ -1,4 +1,5 @@
-# 🎬 Wistia Video Insights Project
+# 🎬 Wistia Video Analytics Pipeline
+**An end-to-end data engineering solution for video engagement metrics from Wistia**  
 
 ### End-to-End Data Engineering Pipeline
 
@@ -11,7 +12,7 @@
 The marketing team uses Wistia to track video engagement across Facebook and YouTube.
 The goal of this project is to design and implement a **data pipeline** that:
 
-* Collects media-level and visitor-level analytics from Wistia’s Stats API
+* Collects media-level and visitor-related analytics from Wistia’s Stats API
 * Automates daily ingestion, transformation, and aggregation of performance metrics
 * Delivers curated datasets and visual dashboards to improve marketing insights and strategy
 
@@ -22,6 +23,11 @@ This project simulates a real-world data engineering assignment where full respo
 ## 🏗️ Architecture Overview
 
 ![Wistia Video Insights Architecture](docs/architecture_diagram.png)
+
+- Bronze Layer (S3 raw JSON)  
+- Silver Layer (Glue / PySpark cleansed Parquet)  
+- Gold Layer (Curated KPI tables)  
+- Serving and Visualization (Athena / Streamlit)  
 
 ### **Summary**
 
@@ -44,6 +50,8 @@ The Wistia Video Insights pipeline automates the flow of engagement data from **
 ---
 
 ## ⚙️ Data Flow
+
+> **Note:** Wistia API returns lifetime cumulative totals — this pipeline captures daily snapshots which form the basis of downstream models.
 
 1. **Ingestion:**
 
@@ -83,9 +91,13 @@ Even though the dataset is intentionally small (limited to two user IDs), the da
 
 <!-- ![Overall application](docs/visualizations/full/full_app.png) -->
 ![Key Performance Indicators](docs/visualizations/full/kpis.png)
-![Key Performance Indicators](docs/visualizations/full/plays_vs_visitors_by_media.png)
-![Key Performance Indicators](docs/visualizations/full/engagement_and_play_rate_over_time.png)
+*KPI Summary - lifetime totals for selected video*
 
+![Plays vs Visitors](docs/visualizations/full/plays_vs_visitors_by_media.png)
+*Total visitors broken down by plays*
+
+![Engagement and Play Rate](docs/visualizations/full/engagement_and_play_rate_over_time.png)
+*Engagement & Play-Rate Snapshot - lifetime averages as of selected date*
 
 ---
 
@@ -95,10 +107,12 @@ This project fulfills the business objective **functionally** by implementing th
 
 | Objective                                       | Implementation                                                                 |
 | ----------------------------------------------- | ------------------------------------------------------------------------------ |
-| **Collect media- and visitor-level analytics**  | Python API scripts ingest Wistia data into S3 Bronze                           |
+| **Collect media- and visitor-level analytics†**  | Python API scripts ingest Wistia data into S3 Bronze                           |
 | **Automate daily ingestion and transformation** | GitHub Actions triggers AWS Glue workflow (Bronze→Silver→Gold)                 |
 | **Curate metrics for insight generation**       | Gold tables aggregate key KPIs and register automatically in Glue Data Catalog |
 | **Provide data for marketing optimization**     | Streamlit dashboard visualizes KPIs and trends through Athena queries          |
+
+†Wistia does not provide true visitor-level records without elevated access.  The user credentials provided for this pipeline did not expose visitor-level details.
 
 In a production environment, this same architecture could easily scale to thousands of videos and millions of visitor events, supporting robust marketing analytics and strategy.
 
@@ -121,6 +135,8 @@ In a production environment, this same architecture could easily scale to thousa
 
 ## 🧩 Key Learnings
 
+* Solved pagination infinite-loop due to API limitations
+* Adapted lifetime cumulative metrics into snapshot analytics
 * Designing medallion architecture (Bronze → Silver → Gold) for API-sourced datasets
 * Automating table registration via PySpark `saveAsTable()` instead of Crawlers
 * Handling schema evolution and incremental data ingestion
@@ -140,11 +156,12 @@ In a production environment, this same architecture could easily scale to thousa
 
 ---
 
-## 👨‍💻 Author
-
-**Rich Kindle**
-*Data Engineer • Musician • Creator*
-📧 https://github.com/kindlerl
+### 👨‍💻 Author & Credits  
+**Rich Kindle**  
+Data Engineer • Musician • Creator  
+Git:  http://github.com/kindlerl  
+Email: richkindle@me.com  
+LinkedIn: https://www.linkedin.com/in/richkindle
 
 
 
