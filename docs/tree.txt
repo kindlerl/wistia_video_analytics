@@ -1,0 +1,75 @@
+.
+├── Project_Documentation
+│   ├── CICD
+│   │   └── GitHub_CI-CD_Create.md
+│   └── create_workflow
+│       ├── README.md
+│       ├── activate_triggers_manually.sh
+│       ├── create_daily_trigger.sh
+│       ├── create_on_demand_trigger.sh
+│       ├── create_triggers.sh
+│       ├── create_workflow.sh
+│       ├── show_trigger_state.sh
+│       ├── show_workflow.sh
+│       ├── status_workflow.sh
+│       ├── test_workflow.sh
+│       ├── trigger_bronze_to_metadata_silver.json
+│       ├── trigger_daily_start.json
+│       ├── trigger_metadata_to_fact_silver.json
+│       ├── trigger_on_demand_start.json
+│       ├── trigger_silver_to_gold.json
+│       ├── verify_workflow.sh
+│       └── wistia_daily_workflow.json
+├── README.md
+├── dashboard
+│   ├── README.md
+│   ├── app.py
+│   ├── charts.py
+│   ├── config.py
+│   ├── data
+│   │   ├── sample_gold_data.csv
+│   │   ├── sample_silver_data.csv
+│   │   └── sample_silver_fact_data.csv
+│   ├── debug_dashboard.ipynb
+│   ├── requirements.txt
+│   ├── sample_gold_data.csv
+│   ├── sample_silver_data.csv
+│   ├── streamlit_app.py
+│   ├── unload_gold_to_csv.sql
+│   └── utils.py
+├── docs
+│   ├── README.md
+│   ├── architecture_diagram.drawio
+│   ├── architecture_diagram.png
+│   └── visualizations
+│       ├── full
+│       │   ├── engagement_and_play_rate_over_time.png
+│       │   ├── full_app.pdf
+│       │   ├── full_app.png
+│       │   ├── kpis.png
+│       │   └── plays_vs_visitors_by_media.png
+│       └── thumb
+├── glue
+│   ├── jobs
+│   │   ├── README.md
+│   │   ├── bronze
+│   │   │   └── wistia_ingestion_bronze_job.py
+│   │   ├── gold
+│   │   │   └── wistia_transform_gold_job.py
+│   │   ├── silver
+│   │   │   ├── wistia_transform_fact_silver_job.py
+│   │   │   └── wistia_transform_metadata_silver_job.py
+│   │   └── util
+│   │       └── wistia_import_historical_data_job.py
+│   └── workflow
+│       └── README.md
+├── scripts
+├── sql
+│   ├── misc.sql
+│   ├── unload_gold_to_csv.sql
+│   └── unload_silver_to_csv.sql
+├── tree.txt
+└── workflows
+    └── deploy_wistia_pipeline.yml -> ../.github/workflows/deploy_wistia_pipeline.yml
+
+20 directories, 53 files
