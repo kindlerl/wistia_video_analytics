@@ -20,6 +20,10 @@ This project simulates a real-world data engineering assignment where full respo
 
 ## 🏗️ Architecture Overview
 
+### **Current State - MVP**
+
+This repo represents the MVP batch pipeline implemented for the project. For simplicity and scope control, CI/CD and scheduled workflow trigger were combined in GitHub Actions.  In a more mature production setup, I’d likely move the scheduling into EventBridge or a Glue trigger and keep GitHub Actions focused purely on CI/CD, but for this project I used GitHub’s cron scheduler to kick off the Glue Workflow once per day.
+
 ![Wistia Video Insights Architecture](docs/architecture_diagram.png)
 
 - Bronze Layer (S3 raw JSON)  
@@ -34,7 +38,7 @@ The Wistia Video Insights pipeline automates the flow of engagement data from **
 | Layer                         | Key Components                             | Description                                                                                                   |
 | ----------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
 | **Source**                    | Wistia Stats API                           | Retrieves media- and visitor-level engagement metrics                                                         |
-| **Ingestion & Orchestration** | GitHub Actions (CI/CD) → AWS Glue Workflow | GitHub triggers daily pipeline execution; workflow orchestrates Bronze → Silver → Gold transformations        |
+| **Ingestion & Orchestration** | GitHub Actions (CI/CD + scheduled trigger) → AWS Glue Workflow | GitHub Actions runs on a daily schedule, starts the `wistia_daily_workflow`, and monitors its status; the Glue Workflow orchestrates the Bronze → Silver → Gold ETL steps. |
 | **Bronze (Raw)**              | S3 Raw JSON                                | Stores unmodified Wistia API data for auditability                                                            |
 | **Silver (Refined)**          | AWS Glue (PySpark)                         | Cleanses and standardizes schema; dedupes and partitions data by `load_date`                                  |
 | **Gold (Curated)**            | AWS Glue (PySpark + saveAsTable)           | Aggregates KPIs (plays, visitors, engagement, play rate); automatically registers tables in Glue Data Catalog |
